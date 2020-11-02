@@ -81,6 +81,28 @@ void rx_usart2(uint8_t ch)
 
 /* USER CODE BEGIN 1 */
 
+uint8_t USART_WriteStr(char* str){
+// max length of string is 255
+// data will be send until \0
+
+	for( uint8_t i= 0; i<0xFF ; i++){
+
+		// check for end of string
+		if( str[i] == '\0' )
+			return 0;
+
+		// wait until bus is ready for transmitting
+		while(!LL_USART_IsActiveFlag_TXE(USART2))
+			;
+
+		// transmit one char
+		LL_USART_TransmitData8(USART2, str[i]);
+
+	}
+
+return 1; //can't find \0
+
+}
 /* USER CODE END 1 */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

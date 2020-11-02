@@ -39,7 +39,7 @@ void USART2_RegisterCallback(void *callback);
 void rx_usart2(uint8_t ch);
 
 /* USER CODE BEGIN Prototypes */
-
+uint8_t USART_WriteStr(char* str);
 /* USER CODE END Prototypes */
 
 #ifdef __cplusplus

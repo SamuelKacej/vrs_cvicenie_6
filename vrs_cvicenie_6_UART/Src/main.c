@@ -28,6 +28,12 @@ void SystemClock_Config(void);
 
 void process_serial_data(uint8_t ch);
 
+uint8_t FindStrInStr(char* ref, char* cmp);
+
+const uint8_t buffLen = 7;
+static char passwordBuffer[7] = {1,2,3,4,5,6,0};
+
+
 int main(void)
 {
 
@@ -43,14 +49,29 @@ int main(void)
 
   USART2_RegisterCallback(process_serial_data);
 
-  char tx_data = 'a';
 
   while (1)
   {
-	  LL_USART_TransmitData8(USART2, tx_data++);
-	  tx_data == ('z' + 1) ? tx_data = 'a' : tx_data;
 
-	  LL_mDelay(50);
+
+	  if( LL_GPIO_IsOutputPinSet(GPIOB, LL_GPIO_PIN_3) )
+		  USART_WriteStr("LED svieti ");
+	  else
+		  USART_WriteStr("LED nesvieti ");
+
+
+	  // normally I would use timmer, but we have to use delay
+		for(uint32_t i = 0; i<0x2db6 ;i++){
+
+			const char* strOn = "ledOFF"; // tak to je v zadani ¯\_(ツ)_/¯
+			const char* strOff = "ledON"; // tak to je v zadani ¯\_(ツ)_/¯
+
+			if(FindStrInStr((char*)strOff, passwordBuffer))
+				LL_GPIO_ResetOutputPin(GPIOB, LL_GPIO_PIN_3);
+			if(FindStrInStr((char*)strOn, passwordBuffer))
+				LL_GPIO_SetOutputPin(GPIOB, LL_GPIO_PIN_3);
+		}
+
   }
 }
 
@@ -89,30 +110,41 @@ void SystemClock_Config(void)
   LL_SetSystemCoreClock(8000000);
 }
 
+uint8_t FindStrInStr(char* ref, char* cmp){
+	uint8_t i_ref = 0;
+
+	for(uint8_t i = 0 ; i<255 ; i++){
+
+		// check end of string
+		if(ref[i_ref] == '\0')
+			return 1; // ref string was found
+		if(cmp[i] == '\0')
+			return 0; // could not find string
+
+		if(cmp[i] == ref[i_ref])
+			i_ref++; // find next char
+		else
+			i_ref=0; // find string from begin
+	}
+
+
+}
 
 void process_serial_data(uint8_t ch)
 {
-	static uint8_t count = 0;
 
-	if(ch == 'a')
-	{
-		count++;
 
-		if(count >= 3)
-		{
-			if((LL_GPIO_ReadInputPort(GPIOB) & (1 << 3)) >> 3)
-			{
-				LL_GPIO_ResetOutputPin(GPIOB, LL_GPIO_PIN_3);
-			}
-			else
-			{
-				LL_GPIO_SetOutputPin(GPIOB, LL_GPIO_PIN_3);
-			}
-
-			count = 0;
-			return;
-		}
+	// shift left passwordBuffer by one char
+	for( uint8_t i = 0 ; i< buffLen-2 ; i++){
+		passwordBuffer[i] = passwordBuffer[i+1];
 	}
+
+	// add new char to
+	passwordBuffer[buffLen-2] = ch;
+	passwordBuffer[buffLen-1] = '\0'; // last must be allways 0
+
+	return;
+
 }
 
 
